@@ -15,13 +15,13 @@ class TreeParser(
 
   def composeTree(trees: List[DecisionTreeClassificationModel], validationDataset: DataFrame, selected: Array[Int], numOfLabels: Int) = {
     val countingCubes = extractCubes(trees, validationDataset, selected)
-    val neighborMap = pairWithNeigbors(countingCubes, numOfLabels)
+    val neighborMap = pairWithNeigborsFilteringImbalanced(countingCubes, numOfLabels)
     if (neighborMap.isEmpty) println("Highly imbalanced")
     val labelledCubes = voteForLabel(neighborMap)
     new IntegratedModel(labelledCubes)
   }
 
-  private def pairWithNeigbors = (cubes: List[CountingCube], numOfLabels: Int) =>
+  private def pairWithNeigborsFilteringImbalanced = (cubes: List[CountingCube], numOfLabels: Int) =>
     (for {
       cube <- cubes
       neighbor <- cubes if (cube isNeighborOf neighbor) && neighbor.isBalanced(numOfLabels)
