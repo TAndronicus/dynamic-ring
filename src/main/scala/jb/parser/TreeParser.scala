@@ -70,7 +70,7 @@ class TreeParser(
             )
             .select(vector_to_array(col(Const.FEATURES)), col(Const.LABEL))
             .collect()
-            .map(r => (r.getAs[List[Double]](0), Util.parseDouble(r.get(1))))
+            .map(r => (r.getSeq[Double](0).toList, Util.parseDouble(r.get(1))))
             .toList
         )
       } // List[Cube]

@@ -4,10 +4,13 @@ import jb.conf.Config
 import org.apache.spark.ml.linalg.Vectors.dense
 
 case class Cube(min: List[Double], max: List[Double], objects: List[(List[Double], Double)]) {
-  def getMidAsMlVector = dense(objects
-    .map(_._1)
-    .reduce((l1: List[Double], l2: List[Double]) => List(l1.head + l2.head, l1.tail.head + l2.tail.head))
-    .toArray)
+  def getMidAsMlVector = {
+    dense(objects
+      .map(_._1)
+      .foldLeft(List(0d, 0d))((l1: List[Double], l2: List[Double]) => List(l1.head + l2.head, l1.tail.head + l2.tail.head))
+      .map(_ / objects.size)
+      .toArray)
+  }
 }
 
 case class CountingCube(min: List[Double], max: List[Double], mid: List[Double], objects: List[(List[Double], Double)], labelCount: Map[Double, Int]) {
