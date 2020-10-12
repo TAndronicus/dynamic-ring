@@ -1,15 +1,22 @@
 package jb.model
 
-import org.apache.spark.ml.linalg
+import jb.conf.Config
+import org.apache.spark.ml.linalg.Vectors.dense
 
-case class Cube(min: List[Double], max: List[Double]) {
-  def getMidAsMlVector = new linalg.DenseVector(min.zip(max)
-    .map { case (xMin, xMax) => (xMin + xMax) / 2 }
+case class Cube(min: List[Double], max: List[Double], objects: List[(List[Double], Double)]) {
+  def getMidAsMlVector = dense(objects
+    .map(_._1)
+    .reduce((l1: List[Double], l2: List[Double]) => List(l1.head + l2.head, l1.tail.head + l2.tail.head))
     .toArray)
-
 }
 
-case class CountingCube(min: List[Double], max: List[Double], labelCount: Map[Double, Int]) {
+case class CountingCube(min: List[Double], max: List[Double], mid: List[Double], objects: List[(List[Double], Double)], labelCount: Map[Double, Int]) {
+  def isBalanced(numOfLabels: Int) = {
+    val grouped = objects.groupBy(_._2)
+      .mapValues(_.size / objects.size)
+    numOfLabels == grouped.size && grouped.minBy(_._2)._2 > Config.nonBalancedThreshold
+  }
+
   def isNeighborOf(cube: CountingCube) =
     min.indices
       .forall(index => cube.min(index) == min(index)
@@ -18,13 +25,10 @@ case class CountingCube(min: List[Double], max: List[Double], labelCount: Map[Do
         || cube.max(index) == max(index))
 
   def withDistance(dist: Double) = WeightingCube(min, max, labelCount, dist)
-
-  val getMid = min.zip(max)
-    .map { case (xMin, xMax) => (xMin + xMax) / 2 }
 }
 
 object CountingCube {
-  def fromCube(cube: Cube, labelCount: Map[Double, Int]) = CountingCube(cube.min, cube.max, labelCount)
+  def fromCube(cube: Cube, labelCount: Map[Double, Int]) = CountingCube(cube.min, cube.max, List(), cube.objects, labelCount) // TODO
 }
 
 case class WeightingCube(min: List[Double], max: List[Double], labelCount: Map[Double, Int], distance: Double)
