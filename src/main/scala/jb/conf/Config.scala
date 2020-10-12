@@ -11,6 +11,9 @@ object Config {
   val maxBins = 64
   val datasetSize = 10000
 
+  /** Non-balanced filtering */
+  val nonBalancedThreshold = .1
+
   /** Parametrizing */
   val metricFunction: (CountingCube, CountingCube) => Double = MetricFunctions.euclidean
   val mappingFunction: Map[Double, Map[Double, Int]] => Double = WeightingFunctions.halfByDist
