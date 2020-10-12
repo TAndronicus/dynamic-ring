@@ -1,39 +1,39 @@
 package jb.parser
 
 import jb.model._
+import jb.util.{Const, Util}
 import org.apache.spark.ml.classification.DecisionTreeClassificationModel
+import org.apache.spark.ml.functions.vector_to_array
 import org.apache.spark.ml.tree.{ContinuousSplit, InternalNode, LeafNode, Node}
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.functions.col
 
 class TreeParser(
                   metricFunction: (CountingCube, CountingCube) => Double,
                   mappingFunction: Map[Double, Map[Double, Int]] => Double
                 ) {
 
-  private val pairWithNeigbors = (cubes: List[CountingCube]) =>
+  def composeTree(trees: List[DecisionTreeClassificationModel], validationDataset: DataFrame, selected: Array[Int], numOfLabels: Int) = {
+    val countingCubes = extractCubes(trees, validationDataset, selected)
+    val neighborMap = pairWithNeigbors(countingCubes, numOfLabels)
+    val labelledCubes = voteForLabel(neighborMap)
+    new IntegratedModel(labelledCubes)
+  }
+
+  private def pairWithNeigbors = (cubes: List[CountingCube], numOfLabels: Int) =>
     (for {
       cube <- cubes
-      neighbor <- cubes if cube isNeighborOf neighbor
+      neighbor <- cubes if (cube isNeighborOf neighbor) && neighbor.isBalanced(numOfLabels)
     } yield (cube, neighbor.withDistance(metricFunction(cube, neighbor)))) // List[(CountingCube, WeightingCube)]
       .groupBy { case (center, _) => center } // Map[CountingCube, List[(CountingCube, WeightingCube)]], turn to map
       .mapValues(_.map(_._2)) // Map[CountingCube, List[WeightingCube]], list of neighbors as value
-  private val voteForLabel = (cubes: Map[CountingCube, List[WeightingCube]]) =>
+
+  private def voteForLabel = (cubes: Map[CountingCube, List[WeightingCube]]) =>
     cubes
       .mapValues(_.map(wc => (wc.distance, wc.labelCount)).toMap)
       .mapValues(mappingFunction)
       .map { case (cc, label) => LabelledCube(cc.min, cc.max, label) }
       .toList
-  private val extractCubes = (trees: List[DecisionTreeClassificationModel]) => {
-    val (x1cutpoints, x2cutpoints) = trees.map(_.rootNode)
-      .flatMap(extractCutpointsRecursively)
-      .distinct
-      .partition({ case (feature, _) => feature == 0 })
-    cutpointsCrossProd(
-      extractCutpointsFromPartitions(x1cutpoints),
-      extractCutpointsFromPartitions(x2cutpoints)
-    )
-      .map { case ((minX1, maxX1), (minX2, maxX2)) => Cube(List(minX1, minX2), List(maxX1, maxX2)) }
-      .map(cube => CountingCube.fromCube(cube, classifyMid(cube, trees)))
-  }
 
   private def extractCutpointsRecursively(tree: Node): List[Tuple2[Int, Double]] = {
     tree match {
@@ -49,8 +49,32 @@ class TreeParser(
     }
   }
 
-  def composeTree(trees: List[DecisionTreeClassificationModel]) = {
-    new IntegratedModel((extractCubes andThen pairWithNeigbors andThen voteForLabel) (trees))
+  private def extractCubes = (trees: List[DecisionTreeClassificationModel], validationDataset: DataFrame, selected: Array[Int]) => {
+    val (x1cutpoints, x2cutpoints) = trees.map(_.rootNode)
+      .flatMap(extractCutpointsRecursively)
+      .distinct
+      .partition({ case (feature, _) => feature == 0 })
+    cutpointsCrossProd(
+      extractCutpointsFromPartitions(x1cutpoints),
+      extractCutpointsFromPartitions(x2cutpoints)
+    ) // List[((Double, Double), (Double, Double))]
+      .map { case ((minX1, maxX1), (minX2, maxX2)) =>
+        Cube(
+          List(minX1, minX2),
+          List(maxX1, maxX2),
+          validationDataset.
+            filter(col(s"_c${selected(0)}") >= minX1
+              && col(s"_c${selected(0)}") <= maxX1
+              && col(s"_c${selected(1)}") >= minX2
+              && col(s"_c${selected(1)}") <= maxX2
+            )
+            .select(vector_to_array(col(Const.FEATURES)), col(Const.LABEL))
+            .collect()
+            .map(r => (r.getAs[List[Double]](0), Util.parseDouble(r.get(1))))
+            .toList
+        )
+      } // List[Cube]
+      .map(cube => CountingCube.fromCube(cube, classifyMid(cube, trees))) // List[CountingCube]
   }
 
   private def classifyMid(cube: Cube, trees: List[DecisionTreeClassificationModel]) = trees

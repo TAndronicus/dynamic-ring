@@ -15,7 +15,7 @@ import scala.collection.mutable
 
 object Util {
 
-  def densifyLabel(input: DataFrame): DataFrame = {
+  def densifyLabel(input: DataFrame): (Int, DataFrame) = {
     val columnMapping = input.select(Const.SPARSE_LABEL)
       .orderBy(Const.SPARSE_LABEL)
       .dropDuplicates()
@@ -24,9 +24,12 @@ object Util {
       .zipWithIndex
       .toMap
     val mapper = columnMapping(_)
-    input.withColumn(Const.LABEL, udf(mapper)
-      .apply(col(SPARSE_LABEL)))
-      .drop(Const.SPARSE_LABEL)
+    (
+      columnMapping.maxBy(_._2)._2 + 1,
+      input.withColumn(Const.LABEL, udf(mapper)
+        .apply(col(SPARSE_LABEL)))
+        .drop(Const.SPARSE_LABEL)
+    )
   }
 
   def optimizeInput(input: DataFrame, dataPrepModel: PipelineModel): DataFrame = {
@@ -58,10 +61,10 @@ object Util {
     * @param subsets - array of subsets to dispense
     * @return
     */
-  def dispenseSubsets(subsets: Array[DataFrame]): (Array[DataFrame], DataFrame) = {
+  def dispenseSubsets(subsets: Array[DataFrame]): (Array[DataFrame], DataFrame, DataFrame) = {
     val trainingSubsets = subsets.take(subsets.length - 1)
     val testSubset = subsets.last
-    (trainingSubsets, testSubset)
+    (trainingSubsets, testSubset, testSubset)
   }
 
   def unionSubsets(subsets: Array[DataFrame]): DataFrame = {
