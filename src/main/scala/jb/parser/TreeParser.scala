@@ -16,6 +16,7 @@ class TreeParser(
   def composeTree(trees: List[DecisionTreeClassificationModel], validationDataset: DataFrame, selected: Array[Int], numOfLabels: Int) = {
     val countingCubes = extractCubes(trees, validationDataset, selected)
     val neighborMap = pairWithNeigbors(countingCubes, numOfLabels)
+    if (neighborMap.isEmpty) println("Highly imbalanced")
     val labelledCubes = voteForLabel(neighborMap)
     new IntegratedModel(labelledCubes)
   }
