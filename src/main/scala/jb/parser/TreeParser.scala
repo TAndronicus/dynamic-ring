@@ -15,17 +15,17 @@ class TreeParser(
 
   def composeTree(trees: List[DecisionTreeClassificationModel], validationDataset: DataFrame, selected: Array[Int], numOfLabels: Int) = {
     val countingCubes = extractCubes(trees, validationDataset, selected)
-    val neighborMap = pairWithNeigborsFilteringImbalanced(countingCubes, numOfLabels)
-    if (neighborMap.isEmpty) println("Highly imbalanced")
+    val neighborMap = pairWithNeigbors(countingCubes, numOfLabels)
+    if (!neighborMap.exists { case (_, neighbors) => neighbors.exists(_.balanced) }) println("Highly imbalanced")
     val labelledCubes = voteForLabel(neighborMap)
     new IntegratedModel(labelledCubes)
   }
 
-  private def pairWithNeigborsFilteringImbalanced = (cubes: List[CountingCube], numOfLabels: Int) =>
+  private def pairWithNeigbors = (cubes: List[CountingCube], numOfLabels: Int) =>
     (for {
       cube <- cubes
-      neighbor <- cubes if (cube isNeighborOf neighbor) && neighbor.isBalanced(numOfLabels)
-    } yield (cube, neighbor.withDistance(metricFunction(cube, neighbor)))) // List[(CountingCube, WeightingCube)]
+      neighbor <- cubes if cube isNeighborOf neighbor
+    } yield (cube, neighbor.withDistanceAndBalanced(metricFunction(cube, neighbor), neighbor.isBalanced(numOfLabels)))) // List[(CountingCube, WeightingCube)]
       .groupBy { case (center, _) => center } // Map[CountingCube, List[(CountingCube, WeightingCube)]], turn to map
       .mapValues(_.map(_._2)) // Map[CountingCube, List[WeightingCube]], list of neighbors as value
 

@@ -26,7 +26,7 @@ case class CountingCube(min: List[Double], max: List[Double], mid: List[Double],
         || cube.max(index) == min(index)
         || cube.max(index) == max(index))
 
-  def withDistance(dist: Double) = WeightingCube(min, max, labelCount, dist)
+  def withDistanceAndBalanced(dist: Double, balanced: Boolean) = WeightingCube(min, max, labelCount, dist, balanced)
 }
 
 object CountingCube {
@@ -46,7 +46,7 @@ object CountingCube {
   )
 }
 
-case class WeightingCube(min: List[Double], max: List[Double], labelCount: Map[Double, Int], distance: Double)
+case class WeightingCube(min: List[Double], max: List[Double], labelCount: Map[Double, Int], distance: Double, balanced: Boolean)
 
 case class LabelledCube(min: List[Double], max: List[Double], label: Double) {
   def contains(obj: Array[Double]): Boolean = min.indices

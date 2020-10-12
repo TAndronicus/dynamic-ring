@@ -52,6 +52,7 @@ class Runner(val nClassif: Int, var nFeatures: Int) {
     val mvQualityMeasure = testMv(testedSubset, nClassif)
     val rfQualityMeasure = testRF(trainingSubset, testSubset, nClassif)
 
+    println(s"Number of labels: ${densified._1}")
     val integratedModel = new TreeParser(
       Config.metricFunction,
       Config.mappingFunction
