@@ -21,7 +21,7 @@ class TreeParser(
     new IntegratedModel(labelledCubes)
   }
 
-  private def pairWithNeigbors = (cubes: List[CountingCube], numOfLabels: Int) =>
+  private def pairWithNeigbors: (List[CountingCube], Int) => Map[CountingCube, List[WeightingCube]] = (cubes: List[CountingCube], numOfLabels: Int) =>
     (for {
       cube <- cubes
       neighbor <- cubes if cube isNeighborOf neighbor
@@ -29,8 +29,9 @@ class TreeParser(
       .groupBy { case (center, _) => center } // Map[CountingCube, List[(CountingCube, WeightingCube)]], turn to map
       .mapValues(_.map(_._2)) // Map[CountingCube, List[WeightingCube]], list of neighbors as value
 
-  private def voteForLabel = (cubes: Map[CountingCube, List[WeightingCube]]) =>
+  private def voteForLabel: Map[CountingCube, List[WeightingCube]] => List[LabelledCube] = (cubes: Map[CountingCube, List[WeightingCube]]) =>
     cubes
+      .mapValues(_.filter(wc => wc.balanced || wc.distance == 0))
       .mapValues(_.map(wc => (wc.distance, wc.labelCount)).toMap)
       .mapValues(mappingFunction)
       .map { case (cc, label) => LabelledCube(cc.min, cc.max, label) }
@@ -50,7 +51,7 @@ class TreeParser(
     }
   }
 
-  private def extractCubes = (trees: List[DecisionTreeClassificationModel], validationDataset: DataFrame, selected: Array[Int]) => {
+  private def extractCubes: (List[DecisionTreeClassificationModel], DataFrame, Array[Int]) => List[CountingCube] = (trees: List[DecisionTreeClassificationModel], validationDataset: DataFrame, selected: Array[Int]) => {
     val (x1cutpoints, x2cutpoints) = trees.map(_.rootNode)
       .flatMap(extractCutpointsRecursively)
       .distinct
@@ -75,6 +76,7 @@ class TreeParser(
             .toList
         )
       } // List[Cube]
+      //TODO: mid obliczany dwukrotnie
       .map(cube => CountingCube.fromCube(cube, classifyMid(cube, trees))) // List[CountingCube]
   }
 

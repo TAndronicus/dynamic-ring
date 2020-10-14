@@ -12,8 +12,15 @@ import org.apache.spark.sql.types.{DoubleType, LongType, StructField, StructType
 import org.apache.spark.sql.{DataFrame, Dataset, Row}
 
 import scala.collection.mutable
+import scala.util.Random
 
 object Util {
+
+  def baggingDatasets(input: DataFrame, nSubsets: Int): Array[Dataset[Row]] =
+    Array.fill(nSubsets) {
+      Random.nextLong()
+    }
+      .map(seed => input.sample(withReplacement = true, Config.sampleFraction, seed))
 
   def densifyLabel(input: DataFrame): (Int, DataFrame) = {
     val columnMapping = input.select(Const.SPARSE_LABEL)
@@ -62,9 +69,7 @@ object Util {
     * @return
     */
   def dispenseSubsets(subsets: Array[DataFrame]): (Array[DataFrame], DataFrame, DataFrame) = {
-    val trainingSubsets = subsets.take(subsets.length - 1)
-    val testSubset = subsets.last
-    (trainingSubsets, testSubset, testSubset)
+    (subsets.take(subsets.length - 2), subsets.init.last, subsets.last)
   }
 
   def unionSubsets(subsets: Array[DataFrame]): DataFrame = {

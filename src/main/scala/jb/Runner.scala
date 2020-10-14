@@ -1,7 +1,5 @@
 package jb
 
-import java.util.stream.IntStream
-
 import jb.conf.Config
 import jb.io.FileReader.getRawInput
 import jb.parser.TreeParser
@@ -40,10 +38,11 @@ class Runner(val nClassif: Int, var nFeatures: Int) {
     val dataPrepModel = dataPrepPipeline.fit(input)
     input = optimizeInput(input, dataPrepModel)
 
-    val nSubsets = nClassif + 1
-    val subsets = input.randomSplit(IntStream.range(0, nSubsets).mapToDouble(_ => 1D / nSubsets).toArray)
+    val nSubsets = nClassif + 2
+    val subsets = Util.baggingDatasets(input, nSubsets) //.randomSplit(IntStream.range(0, nSubsets).mapToDouble(_ => 1D / nSubsets).toArray)
     recacheInput2Subsets(input, subsets)
-    val (trainingSubsets, validationSubset, testSubset) = dispenseSubsets(subsets) // TODO: validation dataset, bagging
+    val (trainingSubsets, validationSubset, testSubset) = dispenseSubsets(subsets)
+    println(s"Validation dataset size: ${validationSubset.count()}")
     val trainingSubset = unionSubsets(trainingSubsets)
 
     val baseModels = trainingSubsets.map(subset => getEmptyDT.fit(subset))

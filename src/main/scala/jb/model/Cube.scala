@@ -15,7 +15,9 @@ case class Cube(min: List[Double], max: List[Double], objects: List[(List[Double
 case class CountingCube(min: List[Double], max: List[Double], mid: List[Double], objects: List[(List[Double], Double)], labelCount: Map[Double, Int]) {
   def isBalanced(numOfLabels: Int) = {
     val grouped = objects.groupBy(_._2)
-      .mapValues(_.size / objects.size)
+      .mapValues(_.size.toDouble / objects.size)
+    println(s"Groupped size: ${grouped.size}, min: ${min}, max: ${max}")
+    if (grouped.nonEmpty) println(s"Lowest fraction: ${grouped.minBy(_._2)._2}")
     numOfLabels == grouped.size && grouped.minBy(_._2)._2 > Config.nonBalancedThreshold
   }
 

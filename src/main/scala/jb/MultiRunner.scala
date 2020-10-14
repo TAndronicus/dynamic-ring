@@ -9,7 +9,7 @@ object MultiRunner {
 
   def run(nClassif: Int, nFeatures: Int): Unit = {
     val filenames = Array(
-      "aa",
+//      "aa",
       "ap",
       "ba",
       "bi",
@@ -48,16 +48,16 @@ object MultiRunner {
   private def runForFiles(runner: Runner)(filenames: Array[String]): ResultCatcher = {
     val resultCatcher = getResultCatcher
     while (resultCatcher.canConsume && !resultCatcher.isFull) {
-      try {
-        val scores = new Array[Array[Double]](filenames.length)
-        for (index <- filenames.indices) {
-          println(filenames(index))
-          scores(index) = runner.calculateMvIScores(FILENAME_PREFIX + filenames(index))
-        }
-        resultCatcher.consume(scores)
-      } catch {
-        case e: Throwable => println("Caught " + e.getMessage)
+      //      try {
+      val scores = new Array[Array[Double]](filenames.length)
+      for (index <- filenames.indices) {
+        println(filenames(index))
+        scores(index) = runner.calculateMvIScores(FILENAME_PREFIX + filenames(index))
       }
+      resultCatcher.consume(scores)
+      //      } catch {
+      //        case e: Throwable => println("Caught " + e.getMessage)
+      //      }
     }
     resultCatcher
   }
