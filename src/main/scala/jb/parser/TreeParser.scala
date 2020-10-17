@@ -1,5 +1,6 @@
 package jb.parser
 
+import jb.conf.Config
 import jb.model._
 import jb.util.{Const, Util}
 import org.apache.spark.ml.classification.DecisionTreeClassificationModel
@@ -16,7 +17,7 @@ class TreeParser(
   def composeTree(trees: List[DecisionTreeClassificationModel], validationDataset: DataFrame, selected: Array[Int], numOfLabels: Int) = {
     val countingCubes = extractCubes(trees, validationDataset, selected)
     val neighborMap = pairWithNeigbors(countingCubes, numOfLabels)
-    if (!neighborMap.exists { case (_, neighbors) => neighbors.exists(_.balanced) }) println("Highly imbalanced")
+    if (Config.logging && !neighborMap.exists { case (mid, neighbors) => neighbors.filter(wc => !(wc.min == mid.min && wc.max == mid.max)).exists(_.balanced) }) println("Highly imbalanced")
     val labelledCubes = voteForLabel(neighborMap)
     new IntegratedModel(labelledCubes)
   }

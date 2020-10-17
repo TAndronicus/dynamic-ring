@@ -12,7 +12,7 @@ object Config {
   val datasetSize = 10000
 
   /** Datasets */
-  val nonBalancedThreshold = .1
+  val nonBalancedThreshold = .05
   val sampleFraction = 1
 
   /** Parametrizing */
@@ -27,5 +27,6 @@ object Config {
 
   /** Other */
   val recalculate = false
+  val logging = true
 
 }

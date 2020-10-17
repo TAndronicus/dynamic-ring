@@ -39,10 +39,9 @@ class Runner(val nClassif: Int, var nFeatures: Int) {
     input = optimizeInput(input, dataPrepModel)
 
     val nSubsets = nClassif + 2
-    val subsets = Util.baggingDatasets(input, nSubsets) //.randomSplit(IntStream.range(0, nSubsets).mapToDouble(_ => 1D / nSubsets).toArray)
+    val subsets = Util.baggingDatasets(input, nSubsets)
     recacheInput2Subsets(input, subsets)
     val (trainingSubsets, validationSubset, testSubset) = dispenseSubsets(subsets)
-    println(s"Validation dataset size: ${validationSubset.count()}")
     val trainingSubset = unionSubsets(trainingSubsets)
 
     val baseModels = trainingSubsets.map(subset => getEmptyDT.fit(subset))
@@ -51,12 +50,11 @@ class Runner(val nClassif: Int, var nFeatures: Int) {
     val mvQualityMeasure = testMv(testedSubset, nClassif)
     val rfQualityMeasure = testRF(trainingSubset, testSubset, nClassif)
 
-    println(s"Number of labels: ${densified._1}")
     val integratedModel = new TreeParser(
       Config.metricFunction,
       Config.mappingFunction
     ).composeTree(baseModels.toList, validationSubset, Util.getSelectedFeatures(dataPrepModel), densified._1)
-    integratedModel.checkDiversity(filename)
+    if (Config.logging) integratedModel.checkDiversity(filename)
 
     val iPredictions = integratedModel.transform(testedSubset)
     val iQualityMeasure = testI(iPredictions, testedSubset)
