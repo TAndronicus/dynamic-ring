@@ -5,6 +5,7 @@ import jb.model._
 import jb.util.{Const, Util}
 import org.apache.spark.ml.classification.DecisionTreeClassificationModel
 import org.apache.spark.ml.functions.vector_to_array
+import org.apache.spark.ml.linalg.Vectors.dense
 import org.apache.spark.ml.tree.{ContinuousSplit, InternalNode, LeafNode, Node}
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions.col
@@ -77,12 +78,23 @@ class TreeParser(
             .toList
         )
       } // List[Cube]
-      //TODO: mid obliczany dwukrotnie
-      .map(cube => CountingCube.fromCube(cube, classifyMid(cube, trees))) // List[CountingCube]
+      .map(cube => (cube, calculateMid(cube)))
+      .map { case (cube, mid) => CountingCube.fromCube(cube, classifyMid(cube, trees, mid), mid) } // List[CountingCube]
   }
 
-  private def classifyMid(cube: Cube, trees: List[DecisionTreeClassificationModel]) = trees
-    .map(_.predict(cube.getMidAsMlVector))
+  private def calculateMid(cube: Cube): List[Double] = {
+    cube.objects
+      .map { case (coord, _) => coord }
+      .reduceOption((l, r) => List(l.head + r.head, l.tail.head + r.tail.head))
+      .map(_.map(_ / cube.objects.size))
+      .getOrElse(
+        cube.min.zip(cube.max)
+          .map { case (minX, maxX) => (minX + maxX) / 2 }
+      )
+  }
+
+  private def classifyMid(cube: Cube, trees: List[DecisionTreeClassificationModel], mid: List[Double]) = trees
+    .map(_.predict(dense(mid.toArray)))
     .groupBy(identity)
     .mapValues(_.size)
 

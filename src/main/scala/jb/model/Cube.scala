@@ -1,16 +1,8 @@
 package jb.model
 
 import jb.conf.Config
-import org.apache.spark.ml.linalg.Vectors.dense
 
-case class Cube(min: List[Double], max: List[Double], objects: List[(List[Double], Double)]) {
-  def getMidAsMlVector =
-    dense(objects
-      .map(_._1)
-      .foldLeft(List(0d, 0d))((l1: List[Double], l2: List[Double]) => List(l1.head + l2.head, l1.tail.head + l2.tail.head))
-      .map(_ / objects.size)
-      .toArray)
-}
+case class Cube(min: List[Double], max: List[Double], objects: List[(List[Double], Double)])
 
 case class CountingCube(min: List[Double], max: List[Double], mid: List[Double], objects: List[(List[Double], Double)], labelCount: Map[Double, Int]) {
   def isBalanced(numOfLabels: Int) = {
@@ -30,17 +22,10 @@ case class CountingCube(min: List[Double], max: List[Double], mid: List[Double],
 }
 
 object CountingCube {
-  def fromCube(cube: Cube, labelCount: Map[Double, Int]) = CountingCube(
+  def fromCube(cube: Cube, labelCount: Map[Double, Int], mid: List[Double]) = CountingCube(
     cube.min,
     cube.max,
-    cube.objects
-      .map { case (coord, _) => coord }
-      .reduceOption((l, r) => List(l.head + r.head, l.tail.head + r.tail.head))
-      .map(_.map(_ / cube.objects.size))
-      .getOrElse(
-        cube.min.zip(cube.max)
-          .map { case (minX, maxX) => (minX + maxX) / 2 }
-      ),
+    mid,
     cube.objects,
     labelCount
   )
