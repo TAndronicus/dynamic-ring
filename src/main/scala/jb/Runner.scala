@@ -17,16 +17,11 @@ class Runner(val nClassif: Int, var nFeatures: Int) {
 
   def calculateMvIScores(filename: String): Array[Double] = {
 
-    //    import SparkEmbedded.ss.implicits._
     SparkEmbedded.ss.sqlContext.clearCache()
 
     var input = getRawInput(filename, "csv")
     val densified = densifyLabel(input)
     input = densified._2
-    //    input.groupBy(col("label")).count().select(max(col("count")).divide(min(col("count")))).show()
-    //    println(input.count())
-    //    input.groupBy(col("label")).count().select(min(col("count"))).show()
-    //    input.groupBy(col("label")).count().select(max(col("count"))).show()
     if (nFeatures > input.columns.length - 1) {
       this.nFeatures = input.columns.length - 1
       println(s"Setting nFeatures to $nFeatures")

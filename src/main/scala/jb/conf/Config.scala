@@ -9,7 +9,6 @@ object Config {
   val maxDepth: Int = 10
   val impurity = "gini"
   val maxBins = 64
-  val datasetSize = 10000
 
   /** Datasets */
   val nonBalancedThreshold = .05
@@ -20,10 +19,10 @@ object Config {
   val mappingFunction: Map[Double, Map[Double, Int]] => Double = WeightingFunctions.halfByDist
 
   /** Result catcher */
+  val batch: Int = 10 // minimal number of results to average
   val treshold: Double = .4
-  val batch: Int = 4
   val minIter: Int = 10
-  val maxIter: Int = 200
+  val maxIter: Int = 100
 
   /** Other */
   val recalculate = false
