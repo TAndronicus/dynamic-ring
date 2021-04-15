@@ -13,7 +13,7 @@ object Const {
   val AVERAGE_SUFFIX = "_avg"
   val COLUMNS2DROP = Array("rawPrediction", "probability")
   val SPARSE_PREDICTIONS = "sparse_predictions"
-  val FILENAME_PREFIX = "B/"
+  val FILENAME_PREFIX = "datasets/"
   val RESULT_PREFIX = "result/"
 
   val EPSILON = 1e-6
