@@ -1,7 +1,5 @@
 .idea/
 target/
 project/
-A/
-B/
-result*
+datasets
 **/.directory
