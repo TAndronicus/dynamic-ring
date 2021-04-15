@@ -1,5 +1,6 @@
 package jb
 
+import jb.conf.Config
 import jb.server.SparkEmbedded
 import jb.util.Const
 
@@ -9,11 +10,10 @@ object ExperimentPlan {
 
   def main(args: Array[String]): Unit = {
     SparkEmbedded.setLogError()
-    val nClassifs = Array(7, 9)
     val nFeatures = 2
     createResultFolder()
 
-    for (nC <- nClassifs) {
+    for (nC <- Config.numberOfBaseClassifiers) {
       MultiRunner.run(nC, nFeatures)
     }
   }

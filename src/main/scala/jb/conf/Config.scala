@@ -9,6 +9,7 @@ object Config {
   val maxDepth: Int = 10
   val impurity = "gini"
   val maxBins = 64
+  val numberOfBaseClassifiers = Array(3, 5, 7)
 
   /** Datasets */
   val nonBalancedThreshold = .05
