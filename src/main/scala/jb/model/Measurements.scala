@@ -22,6 +22,7 @@ case class Measurements(
 
 object Measurements {
   val numberOfMetrics = 7
+  val namesOfMetrics: Array[String] = Array("acc", "precisionMi", "recallMi", "fScoreMi", "precisionM", "recallM", "fScoreM")
 
   def integratedQuality(array: Array[Array[Double]]): Double = array
     .map(a => if (a(2 * numberOfMetrics) > a(numberOfMetrics) || a(2 * numberOfMetrics) > a(0)) 1 else 0)
