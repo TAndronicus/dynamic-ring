@@ -10,7 +10,7 @@ object WeightingFunctions {
     .maxBy { case (_, weight) => weight }
     ._1
 
-  val halfByDist: Map[Double, Map[Double, Int]] => Double = dists => {
+  val halfByDist: Map[Double, Map[Double, Int]] => Double = dists => { // distance -> { label -> count }
     dists.map { case (dist, labels) => labels.mapValues(_ * halfDispatch(dist, dists.keys.sum)) }
       .reduce((m1, m2) => (m1.toSeq ++ m2.toSeq)
         .groupBy(_._1)
