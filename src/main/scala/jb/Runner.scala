@@ -2,6 +2,7 @@ package jb
 
 import jb.conf.Config
 import jb.io.FileReader.getRawInput
+import jb.io.FileWriter
 import jb.parser.TreeParser
 import jb.prediction.Predictions.predictBaseClfs
 import jb.scaler.FeatureScalers
@@ -50,6 +51,7 @@ class Runner(val nClassif: Int, var nFeatures: Int) {
       Config.mappingFunction
     ).composeTree(baseModels.toList, validationSubset, Util.getSelectedFeatures(dataPrepModel), densified._1)
     if (Config.logging) integratedModel.checkDiversity(filename)
+    if (Config.saveModels) FileWriter.writeModelToFile(integratedModel, filename.split("/").last)
 
     val iPredictions = integratedModel.transform(testedSubset)
     val iQualityMeasure = testI(iPredictions, testedSubset)

@@ -28,5 +28,6 @@ object Config {
   /** Other */
   val recalculate = false
   val logging = true
+  val saveModels = true
 
 }

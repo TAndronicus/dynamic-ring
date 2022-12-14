@@ -15,6 +15,7 @@ object Const {
   val SPARSE_PREDICTIONS = "sparse_predictions"
   val FILENAME_PREFIX = "datasets/"
   val RESULT_PREFIX = "result/"
+  val MODEL_PREFIX = "models/"
 
   val EPSILON = 1e-6
 

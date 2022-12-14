@@ -4,7 +4,7 @@ import jb.util.Const
 import org.apache.spark.ml.linalg
 import org.apache.spark.sql.DataFrame
 
-class IntegratedModel(cubes: List[LabelledCube]) {
+class IntegratedModel(val cubes: List[LabelledCube]) {
 
   def transform(dataframe: DataFrame): Array[Double] =
     dataframe.select(Const.FEATURES)

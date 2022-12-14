@@ -14,6 +14,7 @@ object MultiRunner {
     val filenames = new File(Const.FILENAME_PREFIX)
       .listFiles()
       .map(_.getName)
+      .filter(_ == "ap")
 
     val runner = new Runner(nClassif, nFeatures)
     val resultCatcher = runForFiles(runner)(filenames)
